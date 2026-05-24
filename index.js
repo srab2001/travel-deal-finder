@@ -26,7 +26,7 @@ function printHelp() {
   console.log(`travel-deal-finder
 
 Usage:
-  node index.js --setup     Configure origins, destinations, and date windows
+  node index.js --setup     Configure departure airports, destinations, dates, and price thresholds
   node index.js --search    Run a one-shot price check and write a CSV report
   node index.js --help      Show this message
 `);
