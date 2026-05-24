@@ -11,7 +11,9 @@ config.json
 
 # Daily search results
 results_*.csv
+results_*.json
 results/
+best_prices.json
 
 # Build output
 dist/
@@ -19,9 +21,15 @@ build/
 
 # Logs
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# PM2 artifacts
+.pm2/
+dump.pm2
+ecosystem.config.local.js
 
 # OS files
 .DS_Store

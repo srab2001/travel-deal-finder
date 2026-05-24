@@ -2,7 +2,7 @@
 
 Daily flight price monitoring tool — find deals across destinations and airports.
 
-> **Status:** Phase 0 scaffold. Core modules are stubs awaiting Phase 1 implementation.
+> **Status:** v0.1.0 — end-to-end pipeline working. Kiwi.com API integration with mock fallback; daily scheduler; PM2-ready.
 
 ## What it does
 
@@ -39,8 +39,10 @@ npm run setup     # interactive config
 npm run search    # one-shot price check
 ```
 
-See [QUICKSTART.md](QUICKSTART.md) for a walkthrough and
-[docs/](docs/) for architecture and deployment.
+See [QUICKSTART.md](QUICKSTART.md) for the 60-second start,
+[docs/USER_GUIDE.md](docs/USER_GUIDE.md) for the full walkthrough, and
+[docs/BLUEPRINT.md](docs/BLUEPRINT.md) for the roadmap. Changelog:
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Requirements
 
