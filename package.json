@@ -1,0 +1,37 @@
+{
+  "name": "travel-deal-finder",
+  "version": "0.1.0",
+  "description": "Daily flight price monitoring tool - find deals across destinations and airports",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "setup": "node index.js --setup",
+    "search": "node index.js --search",
+    "test": "node --test tests/*.test.js",
+    "test:watch": "node --test --watch tests/*.test.js",
+    "lint": "node -e \"console.log('Add a linter in Phase 1')\""
+  },
+  "keywords": [
+    "flights",
+    "travel",
+    "deals",
+    "price-monitoring",
+    "cli"
+  ],
+  "author": "srab2001",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/srab2001/travel-deal-finder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/srab2001/travel-deal-finder/issues"
+  },
+  "homepage": "https://github.com/srab2001/travel-deal-finder#readme",
+  "dependencies": {},
+  "devDependencies": {}
+}
