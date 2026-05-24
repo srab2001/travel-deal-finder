@@ -11,6 +11,7 @@ const {
   MAX_DEPARTURE_AIRPORTS,
   IATA_PATTERN,
   CITY_TO_AIRPORT,
+  MONTHS_REQUIRED,
 } = require('../lib/inputModule');
 
 function mockIO(answers) {
@@ -179,6 +180,32 @@ test('getDepartureAirports caps at MAX_DEPARTURE_AIRPORTS', async () => {
   const io = mockIO([...codes, 'y']);
   const im = new InputModule({ io });
   assert.deepEqual(await im.getDepartureAirports(), codes);
+});
+
+test('getTravelMonths returns exactly MONTHS_REQUIRED, sorted', async () => {
+  const io = mockIO(['7', '3', '12', '6', '9', 'y']);
+  const im = new InputModule({ io });
+  const result = await im.getTravelMonths();
+  assert.equal(result.length, MONTHS_REQUIRED);
+  assert.deepEqual(result, [3, 6, 7, 9, 12]);
+});
+
+test('getTravelMonths re-prompts on non-numeric and out-of-range input', async () => {
+  const io = mockIO(['abc', '0', '13', '5', '1', '2', '3', '4', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getTravelMonths(), [1, 2, 3, 4, 5]);
+});
+
+test('getTravelMonths rejects duplicate selections', async () => {
+  const io = mockIO(['5', '5', '6', '7', '8', '9', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getTravelMonths(), [5, 6, 7, 8, 9]);
+});
+
+test('getTravelMonths restarts the whole list on rejected confirm', async () => {
+  const io = mockIO(['1', '2', '3', '4', '5', 'n', '6', '7', '8', '9', '10', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getTravelMonths(), [6, 7, 8, 9, 10]);
 });
 
 test('InputModule.getDestinations stops at MAX_DESTINATIONS without needing empty line', async () => {
