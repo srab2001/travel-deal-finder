@@ -12,7 +12,10 @@ test('configManager exports DEFAULT_CONFIG with expected shape', () => {
     'destinations',
     'maxStops',
     'origins',
+    'priceThresholds',
     'searchWindowDays',
+    'stayOptions',
+    'travelMonths',
   ]);
 });
 
