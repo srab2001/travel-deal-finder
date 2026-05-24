@@ -13,6 +13,7 @@ test('configManager exports DEFAULT_CONFIG with expected shape', () => {
     'maxStops',
     'origins',
     'searchWindowDays',
+    'stayOptions',
   ]);
 });
 
