@@ -12,6 +12,8 @@ const {
   IATA_PATTERN,
   CITY_TO_AIRPORT,
   MONTHS_REQUIRED,
+  validatePrice,
+  PRICE_MIN,
 } = require('../lib/inputModule');
 
 function mockIO(answers) {
@@ -206,6 +208,49 @@ test('getTravelMonths restarts the whole list on rejected confirm', async () => 
   const io = mockIO(['1', '2', '3', '4', '5', 'n', '6', '7', '8', '9', '10', 'y']);
   const im = new InputModule({ io });
   assert.deepEqual(await im.getTravelMonths(), [6, 7, 8, 9, 10]);
+});
+
+test('validatePrice accepts integers ≥ PRICE_MIN', () => {
+  assert.deepEqual(validatePrice(String(PRICE_MIN)), { ok: true, value: PRICE_MIN });
+  assert.deepEqual(validatePrice('500'), { ok: true, value: 500 });
+});
+
+test('validatePrice rejects below-min, decimals, non-numeric, empty', () => {
+  assert.equal(validatePrice(String(PRICE_MIN - 1)).ok, false);
+  assert.equal(validatePrice('99.5').ok, false);
+  assert.equal(validatePrice('').ok, false);
+  assert.equal(validatePrice('abc').ok, false);
+  assert.equal(validatePrice('-5').ok, false);
+});
+
+test('getPriceThresholds returns the expected shape', async () => {
+  const io = mockIO(['500', '400', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getPriceThresholds(), { alert: 500, veryGood: 400 });
+});
+
+test('getPriceThresholds re-prompts when veryGood > alert', async () => {
+  const io = mockIO(['400', '500', '300', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getPriceThresholds(), { alert: 400, veryGood: 300 });
+});
+
+test('getPriceThresholds allows alert == veryGood', async () => {
+  const io = mockIO(['250', '250', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getPriceThresholds(), { alert: 250, veryGood: 250 });
+});
+
+test('getPriceThresholds re-prompts when below PRICE_MIN', async () => {
+  const io = mockIO([String(PRICE_MIN - 1), '200', '150', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getPriceThresholds(), { alert: 200, veryGood: 150 });
+});
+
+test('getPriceThresholds restarts on rejected confirm', async () => {
+  const io = mockIO(['500', '400', 'n', '300', '250', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getPriceThresholds(), { alert: 300, veryGood: 250 });
 });
 
 test('InputModule.getDestinations stops at MAX_DESTINATIONS without needing empty line', async () => {
