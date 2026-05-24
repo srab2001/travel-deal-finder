@@ -8,6 +8,9 @@ const {
   MAX_DESTINATIONS,
   STAY_MIN,
   STAY_MAX,
+  MAX_DEPARTURE_AIRPORTS,
+  IATA_PATTERN,
+  CITY_TO_AIRPORT,
 } = require('../lib/inputModule');
 
 function mockIO(answers) {
@@ -128,6 +131,54 @@ test('InputModule.getStayOptions restarts both prompts on rejected confirm', asy
   const io = mockIO(['3', '14', 'n', '5', '10', 'y']);
   const im = new InputModule({ io });
   assert.deepEqual(await im.getStayOptions(), [5, 10]);
+});
+
+test('CITY_TO_AIRPORT contains 20+ cities', () => {
+  assert.ok(Object.keys(CITY_TO_AIRPORT).length >= 20, 'expected at least 20 cities');
+});
+
+test('IATA_PATTERN accepts 3-4 letter codes, rejects others', () => {
+  for (const ok of ['JFK', 'LAX', 'KSFO', 'lhr']) assert.match(ok, IATA_PATTERN);
+  for (const bad of ['JF', 'JFKKK', 'J1K', '']) assert.doesNotMatch(bad, IATA_PATTERN);
+});
+
+test('getDepartureAirports accepts IATA codes and uppercases them', async () => {
+  const io = mockIO(['jfk', 'LAX', '', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), ['JFK', 'LAX']);
+});
+
+test('getDepartureAirports expands multi-airport city to picker', async () => {
+  // "new york" has [JFK, LGA, EWR]; "2" picks LGA
+  const io = mockIO(['new york', '2', '', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), ['LGA']);
+});
+
+test('getDepartureAirports auto-resolves single-airport cities', async () => {
+  const io = mockIO(['atlanta', '', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), ['ATL']);
+});
+
+test('getDepartureAirports re-prompts on unknown city or bad picker input', async () => {
+  const io = mockIO(['zogville', 'new york', 'wat', '1', '', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), ['JFK']);
+});
+
+test('getDepartureAirports rejects duplicate airports', async () => {
+  const io = mockIO(['JFK', 'JFK', 'LAX', '', 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), ['JFK', 'LAX']);
+});
+
+test('getDepartureAirports caps at MAX_DEPARTURE_AIRPORTS', async () => {
+  const codes = ['JFK', 'LAX', 'SFO', 'ORD', 'DFW'];
+  assert.equal(codes.length, MAX_DEPARTURE_AIRPORTS);
+  const io = mockIO([...codes, 'y']);
+  const im = new InputModule({ io });
+  assert.deepEqual(await im.getDepartureAirports(), codes);
 });
 
 test('InputModule.getDestinations stops at MAX_DESTINATIONS without needing empty line', async () => {
