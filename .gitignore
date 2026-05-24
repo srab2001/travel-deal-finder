@@ -11,7 +11,9 @@ config.json
 
 # Daily search results
 results_*.csv
+results_*.json
 results/
+best_prices.json
 
 # Build output
 dist/
