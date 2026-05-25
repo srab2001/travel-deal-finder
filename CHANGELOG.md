@@ -3,7 +3,7 @@
 All notable changes to `travel-deal-finder`. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.1a] — 2026-05-24 — pre-release
+## [0.1.1a] — 2026-05-25 — pre-release
 
 Performance pass on `FlightSearcher`. No API or schema changes. Marked as
 a pre-release because it changes timing semantics that downstream code
