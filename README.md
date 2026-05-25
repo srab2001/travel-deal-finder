@@ -2,7 +2,7 @@
 
 Daily flight price monitoring tool — find deals across destinations and airports.
 
-> **Status:** v0.1.1 — end-to-end pipeline working with validation gates and `--validate` / `--display` CLI flags. Kiwi.com API integration with mock fallback; daily scheduler; PM2-ready.
+> **Status:** v0.1.1a (pre-release) — performance pass on top of v0.1.1. Mock search is now near-instant; live search runs 4 calls in parallel. Validation gates, `--validate` / `--display` flags, Kiwi.com API with mock fallback, daily scheduler, PM2-ready.
 
 ## What it does
 

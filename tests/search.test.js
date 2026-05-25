@@ -113,19 +113,90 @@ test('scrapeGoogleFlights caches within the TTL window', async () => {
   assert.equal(fs.cache.size, 1);
 });
 
-test('scrapeGoogleFlights waits at least rateLimitMs between distinct requests', async () => {
-  let now = 0;
+test('scrapeGoogleFlights skips the rate limit in mock mode (no API key)', async () => {
   const slept = [];
   const fs = new FlightSearcher({
     apiKey: undefined,
     rateLimitMs: 2000,
-    sleep: async (ms) => { slept.push(ms); now += ms; },
-    now: () => now,
+    sleep: async (ms) => { slept.push(ms); },
+    now: () => 0,
     cacheTtlMs: 0,
   });
   await fs.scrapeGoogleFlights('JFK', 'CDG', '2026-06-01', '2026-06-10');
   await fs.scrapeGoogleFlights('JFK', 'CDG', '2026-06-02', '2026-06-11');
-  assert.ok(slept.includes(2000), `expected a 2000ms sleep, got ${JSON.stringify(slept)}`);
+  assert.deepEqual(slept, [], 'mock mode should not sleep');
+});
+
+test('scrapeGoogleFlights enforces rateLimitMs in live mode', async () => {
+  let now = 0;
+  const slept = [];
+  const fakeKiwiResponse = { ok: true, status: 200, json: async () => ({ data: [{ price: 100, airlines: ['XX'], duration: { total: 3600 }, route: [{}] }] }) };
+  const fs = new FlightSearcher({
+    apiKey: 'fake',
+    provider: 'kiwi',
+    fetchImpl: async () => fakeKiwiResponse,
+    rateLimitMs: 2000,
+    sleep: async (ms) => { slept.push(ms); now += ms; },
+    now: () => now,
+    cacheTtlMs: 0,
+    logger: { error: () => {}, log: () => {} },
+  });
+  await fs.scrapeGoogleFlights('JFK', 'CDG', '2026-06-01', '2026-06-10');
+  await fs.scrapeGoogleFlights('JFK', 'CDG', '2026-06-02', '2026-06-11');
+  assert.ok(slept.includes(2000), `expected one 2000ms sleep in live mode, got ${JSON.stringify(slept)}`);
+});
+
+test('searchAllCombinations runs concurrent workers (mock mode, full parallelism)', async () => {
+  const config = {
+    departureAirports: ['JFK', 'SFO'],
+    destinations: ['CDG'],
+    stayOptions: [4],
+    travelMonths: [6],
+  };
+  const slept = [];
+  const fs = new FlightSearcher({
+    apiKey: undefined,
+    rateLimitMs: 2000,
+    sleep: async (ms) => { slept.push(ms); },
+    now: () => 0,
+    cacheTtlMs: 0,
+  });
+  const { results, errors } = await fs.searchAllCombinations(config, { year: 2027 });
+  assert.equal(errors.length, 0);
+  // 2 airports × 27 four-day windows in June = 54
+  assert.equal(results.length, 54);
+  assert.deepEqual(slept, [], 'no sleeps in mock mode');
+});
+
+test('searchAllCombinations honors an explicit concurrency cap', async () => {
+  // Track max in-flight calls using a shared counter.
+  let inFlight = 0;
+  let peakInFlight = 0;
+  const config = {
+    departureAirports: ['JFK', 'SFO', 'ORD'],
+    destinations: ['CDG', 'NRT'],
+    stayOptions: [4],
+    travelMonths: [6],
+  };
+  const fs = new FlightSearcher({
+    apiKey: undefined,
+    rateLimitMs: 0,
+    sleep: async () => {},
+    cacheTtlMs: 0,
+  });
+  // Wrap scrapeGoogleFlights to count parallelism.
+  const original = fs.scrapeGoogleFlights.bind(fs);
+  fs.scrapeGoogleFlights = async (...args) => {
+    inFlight++;
+    peakInFlight = Math.max(peakInFlight, inFlight);
+    await new Promise((r) => setImmediate(r));
+    const result = await original(...args);
+    inFlight--;
+    return result;
+  };
+  await fs.searchAllCombinations(config, { year: 2027, concurrency: 2 });
+  assert.ok(peakInFlight <= 2, `expected at most 2 in flight, peaked at ${peakInFlight}`);
+  assert.ok(peakInFlight >= 2, `expected concurrency of 2 to actually run in parallel, peaked at ${peakInFlight}`);
 });
 
 test('searchAllCombinations iterates the cartesian product', async () => {
