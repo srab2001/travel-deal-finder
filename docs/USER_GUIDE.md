@@ -271,8 +271,16 @@ Just re-run setup — it overwrites the relevant sections:
 node index.js --setup
 ```
 
-Or edit `config.json` directly. Run `node -e "ConfigManager.validate(...)"`
-(or wait for the `--validate` flag in v0.2) to confirm the shape is good.
+Or edit `config.json` directly, then verify the shape:
+
+```bash
+node index.js --validate       # exit 0 on success, 1 with errors listed
+node index.js --display        # pretty-print the merged config
+```
+
+`--validate` is also a handy pre-flight in a cron entry — if your config
+file gets corrupted, the next `--search` will exit non-zero rather than
+silently producing nothing.
 
 ## 8. Common questions
 

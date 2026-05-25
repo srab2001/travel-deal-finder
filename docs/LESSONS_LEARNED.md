@@ -194,14 +194,16 @@ review. For a shared repo this would be different.
 
 ## What this codebase still needs
 
+Gap table as of v0.1.1 (the three "should fix soon" items closed in
+v0.1.1: validation gate, `--validate`/`--display`, branch protection):
+
 | Gap | Severity | Notes |
 |---|---|---|
-| No `--validate` / `--display` CLI flags | low | 10-line addition; v0.2 |
 | Two CSV headers | low | Cosmetic until someone reads both files |
 | `_estimateNextRun` ignores TZ for the estimate | low | Cron firing is correct, only the status string is off |
 | No notifications | medium | The whole point of `priceThresholds.veryGood` is unrealized until v0.2 |
 | No daily CSV rollup | medium | Disk will grow ~1MB/month at typical use; pruning script in docs but not automated |
 | No tests for `index.js` argparse | low | Each path is small; integration test would catch regressions |
-| `runSearch` ignores `ConfigManager.validate()` | medium | A broken config silently produces empty results |
+| No schema versioning | low | Future `config.json` changes will need manual upgrades |
 
-The last one is the only "should fix soon" — should fix soon.
+Notifications is the biggest remaining gap and the headline v0.2 work.
