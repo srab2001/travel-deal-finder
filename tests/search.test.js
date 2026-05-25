@@ -28,6 +28,38 @@ test('flightSearcher exports runSearch', () => {
   assert.equal(typeof runSearch, 'function');
 });
 
+function silentLogger() {
+  return { errors: [], error(msg) { this.errors.push(msg); }, log() {} };
+}
+
+function validConfig() {
+  return {
+    destinations: ['Paris'],
+    departureAirports: ['JFK'],
+    stayOptions: [4, 10],
+    travelMonths: [3, 6, 7, 9, 12],
+    priceThresholds: { alert: 500, veryGood: 400 },
+    scheduledTime: '08:00',
+    timezone: 'UTC',
+    lastRunTime: null,
+    isScheduled: false,
+  };
+}
+
+test('runSearch refuses to run with an invalid config', async () => {
+  const logger = silentLogger();
+  const config = validConfig();
+  config.destinations = [];
+  config.travelMonths = [1, 2];
+  const result = await runSearch({ config, logger, apiKey: undefined, rateLimitMs: 0, sleep: async () => {} });
+  assert.deepEqual(result.results, []);
+  assert.ok(result.errors.length >= 2);
+  const allMessages = logger.errors.join('\n');
+  assert.match(allMessages, /Config is invalid/);
+  assert.match(allMessages, /destinations/);
+  assert.match(allMessages, /travelMonths/);
+});
+
 test('FlightSearcher.formatDate produces YYYY-MM-DD', () => {
   assert.equal(FlightSearcher.formatDate(new Date(Date.UTC(2026, 5, 7))), '2026-06-07');
   assert.equal(FlightSearcher.formatDate('2026-12-31'), '2026-12-31');

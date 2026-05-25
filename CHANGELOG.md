@@ -3,6 +3,35 @@
 All notable changes to `travel-deal-finder`. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] — 2026-05-24
+
+Closes the three "should fix soon" gaps called out in v0.1.0's
+[LESSONS_LEARNED](docs/LESSONS_LEARNED.md). No new features, no schema
+changes — pure quality patch.
+
+### Added
+
+- **`--validate` CLI flag** — runs `ConfigManager.validate()` against the
+  current `config.json`. Prints `Config is valid.` and exits 0 on success;
+  prints the error list and exits 1 on failure. Useful in cron pre-hooks
+  and CI.
+- **`--display` CLI flag** — pretty-prints the current config via
+  `ConfigManager.display()`. Exit 0.
+
+### Changed
+
+- **`runSearch` now gates on `ConfigManager.validate()`** — a broken
+  config no longer silently produces empty results. Errors are logged
+  via the injectable `logger` and returned in the `errors` field.
+- **`node index.js --search` exits 1** when validation kills the run
+  (results empty AND errors present). Previously always exited 0.
+- **Branch protection enabled on `main`** — squash merge only, require PR,
+  require CI to pass, no force pushes.
+
+### Tests
+
+- 92 passing (one new case for `runSearch` validation gate)
+
 ## [0.1.0] — 2026-05-24
 
 Initial release. End-to-end pipeline: configure → search → persist →

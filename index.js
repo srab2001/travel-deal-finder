@@ -10,9 +10,14 @@ async function main(argv) {
     case '--setup':
       await runSetup();
       return 0;
-    case '--search':
-      await runSearch();
-      return 0;
+    case '--search': {
+      const result = await runSearch();
+      return result.results.length === 0 && result.errors.length > 0 ? 1 : 0;
+    }
+    case '--validate':
+      return await runValidate();
+    case '--display':
+      return await runDisplay();
     case '--daemon':
       await runDaemon();
       return 0;
@@ -25,6 +30,25 @@ async function main(argv) {
       printHelp();
       return 1;
   }
+}
+
+async function runValidate() {
+  const config = await ConfigManager.load();
+  const { ok, errors } = ConfigManager.validate(config);
+  if (ok) {
+    console.log('Config is valid.');
+    return 0;
+  }
+  console.error('Config has errors:');
+  for (const err of errors) console.error(`  - ${err}`);
+  console.error('\nRun `node index.js --setup` to fix.');
+  return 1;
+}
+
+async function runDisplay() {
+  const config = await ConfigManager.load();
+  console.log(ConfigManager.display(config));
+  return 0;
 }
 
 async function runDaemon() {
@@ -46,8 +70,6 @@ async function runDaemon() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 
-  // Keep the event loop alive while node-cron holds its own timer.
-  // Returns a promise that never resolves, so main() doesn't exit.
   return new Promise(() => {});
 }
 
@@ -55,10 +77,12 @@ function printHelp() {
   console.log(`travel-deal-finder
 
 Usage:
-  node index.js --setup     Configure departure airports, destinations, dates, and price thresholds
-  node index.js --search    Run a one-shot price check and write a CSV report
-  node index.js --daemon    Start the scheduler in the foreground (PM2/systemd entry point)
-  node index.js --help      Show this message
+  node index.js --setup      Configure departure airports, destinations, dates, and price thresholds
+  node index.js --search     Run a one-shot price check and write a CSV report
+  node index.js --validate   Check that the current config.json passes all rules
+  node index.js --display    Pretty-print the current config
+  node index.js --daemon     Start the scheduler in the foreground (PM2/systemd entry point)
+  node index.js --help       Show this message
 `);
 }
 
