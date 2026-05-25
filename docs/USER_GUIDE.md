@@ -164,19 +164,26 @@ Top deals:
 And on disk: `results_YYYY-MM-DD.csv` (one row per
 airport×destination×date-range combo).
 
-### How many calls is that?
+### How many calls is that, and how long?
 
 For a typical configuration (3 airports × 5 destinations × 2 stays ×
-5 months × ~25 date windows), that's ~3,750 calls. With the default 2s
-rate limit between distinct calls, ~125 minutes (well within Kiwi's free
-tier daily limit).
+5 months × ~25 date windows), that's ~3,750 calls.
 
-To tune:
+- **Mock mode (no API key):** under a second. Mock data is in-process;
+  no rate limit, full parallelism. Useful for trying things out or
+  exercising the pipeline.
+- **Live mode (Kiwi key set):** ~15 minutes for that workload, at the
+  default `concurrency=4` and `rateLimitMs=2000`. (v0.1.0 took ~2 hours
+  for the same workload by running serially.)
+
+To tune further:
 
 - Narrow `travelMonths`, `destinations`, or `departureAirports`.
 - Reduce `stayOptions` to one length (currently can't — two are required;
   this is a v0.2 candidate).
-- Cache means re-running the same day costs nothing.
+- Re-running the same day hits the 24h cache and costs nothing.
+- For programmatic use, `runSearch({ concurrency: 8, rateLimitMs: 500 })`
+  is fine on Kiwi's free tier if you want it faster still.
 
 ## 5. Schedule it (daily)
 

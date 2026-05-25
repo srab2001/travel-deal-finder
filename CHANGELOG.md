@@ -3,6 +3,38 @@
 All notable changes to `travel-deal-finder`. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1a] — 2026-05-25 — pre-release
+
+Performance pass on `FlightSearcher`. No API or schema changes. Marked as
+a pre-release because it changes timing semantics that downstream code
+might (theoretically) depend on.
+
+### Changed
+
+- **Mock mode no longer pays the rate limit.** Previously `--search` with
+  no API key still slept 2s between every combo, making a typical search
+  take an hour. Now mock mode is pure CPU.
+- **Parallel workers in `searchAllCombinations`.** New `concurrency`
+  option, defaults to 4 in live mode (well under any provider's
+  cap-per-second) and unlimited in mock mode. Workers pull from a single
+  queue so progress is monotonic.
+- **Rate limit is now atomic across workers.** Replaced `lastRequestAt`
+  with `nextSlotAt` so concurrent calls each reserve their own slot
+  instead of all racing for the same one. Effective rate stays at
+  `1/rateLimitMs` per second regardless of `concurrency`.
+
+### Measured impact
+
+- 2,214-combo mock search (3 airports × 3 destinations × 2 stays ×
+  5 months): **0.101s** end-to-end (was ~74 minutes pre-fix)
+- Live mode with concurrency=4, rateLimitMs=2000: ~4× faster than v0.1.1
+  on the same workload by overlapping network latency
+
+### Tests
+
+- 95 passing (3 new): mock skips rate limit; live mode still enforces
+  it; explicit `concurrency=N` caps in-flight calls at N
+
 ## [0.1.1] — 2026-05-24
 
 Closes the three "should fix soon" gaps called out in v0.1.0's
